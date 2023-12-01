@@ -1,29 +1,50 @@
-import React from 'react'
-import MeetupList from '../components/meetups/MeetupList';
-
-const DUMMY_DATA = [
-  {
-    id: "m1",
-    title: "This is a first meetup",
-    image:
-      "https://image-cdn.hypb.st/https%3A%2F%2Fhypebeast.com%2Fimage%2F2023%2F06%2Fdemon-slayer-season-4-confirmed-official-teaser-hashira-training-arc-info-tw.jpg?w=960&cbr=1&q=90&fit=max",
-    address: "Meetupstreet 5, 12345 Meetup City",
-    description: "This is a first meetup with the Demon Slayers",
-  },
-  {
-    id: "m2",
-    title: "This is a second meetup",
-    image:
-      "https://i0.wp.com/dmtalkies.com/wp-content/uploads/2023/01/Chainsaw-Man-Ending-Explained-Denji-Makima-Aki-Himeno-Kobeni-and-others.jpg",
-    address: "Meetupstreet 6, 12346 Meetup City",
-    description:
-      "This is a chainsaw meetup, amazing meetup which you definitely should not miss. It will be a lot of fun!",
-  },
-];
+import React from "react";
+import { useState, useEffect } from "react";
+import MeetupList from "../components/meetups/MeetupList";
 
 export default function AllMeetupsPage() {
-  return <div>
-    <h1>All Meetups</h1>
-    <MeetupList meetups={DUMMY_DATA}/>
-  </div>;
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadedMeetups, setLoadedMeetups] = useState([]);
+
+  // without useEffect there will be reloading of component on state change
+  // which will cause an infinite loop of all code running again
+  // with again fetch being called and state being updated
+  useEffect(() => {
+    setIsLoading(true);
+    fetch(
+      "https://react-refresher-69d02-default-rtdb.firebaseio.com/meetups.json"
+    )
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        const meetups = [];
+
+        for (const key in data) {
+          const meetup = {
+            id: key,
+            ...data[key],
+          };
+          meetups.push(meetup);
+        }
+
+        setLoadedMeetups(meetups);
+        setIsLoading(false);
+      });
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section>
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h1>All Meetups</h1>
+      <MeetupList meetups={loadedMeetups} />
+    </section>
+  );
 }
